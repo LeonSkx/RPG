@@ -1,0 +1,46 @@
+Binaries
+
+DerivedDataCache
+
+Intermediate
+
+Saved
+
+Build
+
+
+
+.vscode
+
+.vs
+
+*.VC.db
+
+*.opensdf
+
+*.opendb
+
+*.sdf
+
+*.sln
+
+*.suo
+
+*.xcodeproj
+
+*.xcworkspace
+
+# Content folder - only track RPG subfolder
+Content/*
+!Content/RPG/
+!Content/RPG/**
+
+# Backup and reference folders
+Backup/
+Referencia/
+Referencia 2/
+
+# IDE files
+.idea/
+.vsconfig
+*.DotSettings.user
