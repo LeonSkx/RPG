@@ -111,6 +111,12 @@ void ARPGEnemy::Die(const FVector& DeathImpulse)
 void ARPGEnemy::MulticastHandleDeath_Implementation(const FVector& DeathImpulse)
 {
 	Super::MulticastHandleDeath_Implementation(DeathImpulse);
+	
+	// Esconder a HealthBar quando o inimigo morrer
+	if (HealthBar)
+	{
+		HealthBar->SetVisibility(false);
+	}
 }
 
 void ARPGEnemy::SetCombatTarget_Implementation(AActor* InCombatTarget)
