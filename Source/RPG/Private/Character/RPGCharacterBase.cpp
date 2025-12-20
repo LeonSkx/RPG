@@ -93,6 +93,9 @@ void ARPGCharacterBase::MulticastHandleDeath_Implementation(const FVector& Death
 		return;
 	}
 	
+	// Remover todos os warp targets do Motion Warping ao morrer
+	RemoveAllWarpTargets_Implementation();
+	
 	UGameplayStatics::PlaySoundAtLocation(this, DeathSound, GetActorLocation(), GetActorRotation());
 	
 	GetMesh()->SetSimulatePhysics(true);
@@ -209,6 +212,14 @@ FTaggedMontage ARPGCharacterBase::GetTaggedMontageByTag_Implementation(const FGa
 USkeletalMeshComponent* ARPGCharacterBase::GetWeapon_Implementation()
 {
 	return Weapon;
+}
+
+void ARPGCharacterBase::RemoveAllWarpTargets_Implementation()
+{
+	if (MotionWarping)
+	{
+		MotionWarping->RemoveAllWarpTargets();
+	}
 }
 
 int32 ARPGCharacterBase::GetMinionCount_Implementation()

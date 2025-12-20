@@ -110,5 +110,8 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void SetIsBeingShocked(bool bInShock);
 
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void RemoveAllWarpTargets();
+
 
 };
