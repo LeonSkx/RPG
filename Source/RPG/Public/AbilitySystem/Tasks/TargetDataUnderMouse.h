@@ -26,6 +26,14 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ability|Tasks")
     bool bReplicateTargetData = false;
 
+	// Distância máxima do trace (em cm). Se <= 0, usa MaxTargetingRange do personagem
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ability|Tasks", meta = (ClampMin = "0.0"))
+	float MaxTraceRange = 3000.f;
+
+	// Se true, desenha debug do trace (linha e ponto de impacto)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ability|Tasks|Debug")
+	bool bDrawDebugTrace = true;
+
 private:
 
 	virtual void Activate() override;

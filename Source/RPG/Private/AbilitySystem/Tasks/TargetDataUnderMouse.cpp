@@ -5,6 +5,7 @@
 #include "AbilitySystemComponent.h"
 #include "RPG/RPG.h"
 #include "Character/RPGCharacter.h"
+#include "DrawDebugHelpers.h"
 
 UTargetDataUnderMouse* UTargetDataUnderMouse::CreateTargetDataUnderMouse(UGameplayAbility* OwningAbility)
 {
@@ -55,7 +56,9 @@ void UTargetDataUnderMouse::SendMouseCursorData()
 	// Usar direção da câmera e começar um pouco na frente da câmera
 	FVector Start = CameraLocation + ViewRot.Vector() * 100.f; // 100cm na frente da câmera
 	FVector Direction = ViewRot.Vector();
-	float MaxRange = RPGChar->MaxTargetingRange;
+	
+	// Usar MaxTraceRange configurado ou o padrão do personagem
+	float MaxRange = (MaxTraceRange > 0.f) ? MaxTraceRange : RPGChar->MaxTargetingRange;
 	
 	// Calcular ponto de destino
 	FVector End = Start + Direction * MaxRange;
@@ -64,6 +67,37 @@ void UTargetDataUnderMouse::SendMouseCursorData()
 	FCollisionQueryParams Params(NAME_None, false, nullptr); // Comentado PC->GetPawn() para teste
 	FHitResult CursorHit;
 	GetWorld()->LineTraceSingleByChannel(CursorHit, Start, End, ECC_Visibility, Params);
+	
+	// Debug visual do trace
+	if (bDrawDebugTrace)
+	{
+		UWorld* World = GetWorld();
+		if (World)
+		{
+			FColor TraceColor = CursorHit.bBlockingHit ? FColor::Green : FColor::Red;
+			float DebugDuration = 2.0f;
+			float DebugThickness = 2.0f;
+			
+			// Desenhar linha do trace
+			DrawDebugLine(World, Start, End, TraceColor, false, DebugDuration, 0, DebugThickness);
+			
+			// Desenhar esfera no ponto de início
+			DrawDebugSphere(World, Start, 5.0f, 8, TraceColor, false, DebugDuration, 0, DebugThickness);
+			
+			// Se acertou algo, desenhar esfera no ponto de impacto
+			if (CursorHit.bBlockingHit)
+			{
+				DrawDebugSphere(World, CursorHit.ImpactPoint, 10.0f, 12, FColor::Yellow, false, DebugDuration, 0, DebugThickness);
+				// Desenhar linha normal
+				DrawDebugLine(World, CursorHit.ImpactPoint, CursorHit.ImpactPoint + CursorHit.Normal * 50.0f, FColor::Blue, false, DebugDuration, 0, DebugThickness);
+			}
+			else
+			{
+				// Desenhar esfera no ponto final se não acertou nada
+				DrawDebugSphere(World, End, 5.0f, 8, TraceColor, false, DebugDuration, 0, DebugThickness);
+			}
+		}
+	}
 	
 	// Log do resultado do trace
 	if (CursorHit.bBlockingHit)
