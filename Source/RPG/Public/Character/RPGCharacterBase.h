@@ -56,7 +56,6 @@ public:
 	virtual FOnDamageSignature& GetOnDamageSignature() override;
 	virtual USkeletalMeshComponent* GetWeapon_Implementation() override;
 	virtual int32 GetCharacterLevel_Implementation() const override;
-	virtual void RemoveAllWarpTargets_Implementation() override;
 
 	FOnASCRegistered OnAscRegistered;
 	FOnDeathSignature OnDeathDelegate;
