@@ -75,7 +75,7 @@ ARPGCharacter::ARPGCharacter()
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->TargetArmLength = 250.0f;
+	CameraBoom->TargetArmLength = 400.0f;
 	CameraBoom->bUsePawnControlRotation = true;
 	CameraBoom->SocketOffset = FVector(0.0f, 0.0f, 0.0f);
 	CameraBoom->SetRelativeRotation(FRotator(-10.f, 0.f, 0.f));
@@ -84,7 +84,7 @@ ARPGCharacter::ARPGCharacter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
 	FollowCamera->FieldOfView = 60.f;
-	FollowCamera->SetRelativeLocation(FVector(0.0f, 90.0f, 50.0f));
+	FollowCamera->SetRelativeLocation(FVector(0.0f, 110.0f, 65.0f));
 
 
 
