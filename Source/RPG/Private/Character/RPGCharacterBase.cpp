@@ -214,6 +214,14 @@ USkeletalMeshComponent* ARPGCharacterBase::GetWeapon_Implementation()
 	return Weapon;
 }
 
+void ARPGCharacterBase::RemoveAllWarpTargets_Implementation()
+{
+	if (MotionWarping)
+	{
+		MotionWarping->RemoveAllWarpTargets();
+	}
+}
+
 int32 ARPGCharacterBase::GetMinionCount_Implementation()
 {
 	return MinionCount;
