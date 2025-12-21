@@ -146,8 +146,6 @@ public:
     virtual void AddToSpellPoints_Implementation(int32 InSpellPoints) override;
     virtual int32 GetSpellPoints_Implementation() const override;
     virtual void LevelUp_Implementation() override;
-    virtual void ShowMagicCircle_Implementation(UMaterialInterface* DecalMaterial = nullptr) override;
-    virtual void HideMagicCircle_Implementation() override;
 
     // Combat Interface
     virtual FVector GetCombatSocketLocation_Implementation(const FGameplayTag& MontageTag) override;

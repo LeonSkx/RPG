@@ -58,12 +58,11 @@ public:
 	// === SISTEMA UNIFICADO: COMBO + PROJÉTIL ===
 	
 	// Spawna projétil durante o combo (chamado por notifies)
-	// PlayerLocation: localização do mouse/crosshair (Player)
-	// ActorLocation: localização do alvo de combate (IA)
+	// SpawnTargetLocation: localização do alvo/destino do projétil (flexível para Player ou IA)
 	// bUseManualSpawnOrigin: se verdadeiro, usa ManualSpawnOrigin em vez do socket da arma
 	// ManualSpawnOrigin: localização manual da origem do spawn (usado se bUseManualSpawnOrigin = true)
 	UFUNCTION(BlueprintCallable, Category = "Combo|Projectile")
-	void SpawnProjectile(const FVector& PlayerLocation, const FVector& ActorLocation, 
+	void SpawnProjectile(const FVector& SpawnTargetLocation, 
 	                     bool bUseManualSpawnOrigin = false, const FVector& ManualSpawnOrigin = FVector::ZeroVector);
 
 	// Função com a mesma entrada do SpawnProjectile, renomeada

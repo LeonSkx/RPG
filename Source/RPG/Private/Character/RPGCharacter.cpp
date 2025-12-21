@@ -812,16 +812,6 @@ void ARPGCharacter::LevelUp_Implementation()
 	MulticastLevelUpParticles();
 }
 
-void ARPGCharacter::ShowMagicCircle_Implementation(UMaterialInterface* DecalMaterial)
-{
-	// TODO: Implementar efeito visual do círculo mágico
-}
-
-void ARPGCharacter::HideMagicCircle_Implementation()
-{
-	// TODO: Implementar ocultação do círculo mágico
-}
-
 void ARPGCharacter::MulticastLevelUpParticles_Implementation() const
 {
 	if (IsValid(LevelUpNiagaraComponent))

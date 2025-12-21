@@ -7,9 +7,12 @@
 #include "Character/RPGCharacter.h"
 #include "DrawDebugHelpers.h"
 
-UTargetDataUnderMouse* UTargetDataUnderMouse::CreateTargetDataUnderMouse(UGameplayAbility* OwningAbility)
+UTargetDataUnderMouse* UTargetDataUnderMouse::CreateTargetDataUnderMouse(UGameplayAbility* OwningAbility, float MaxTraceRange, bool bDrawDebugTrace, bool bUsePawnViewPoint)
 {
 	UTargetDataUnderMouse* MyObj = NewAbilityTask<UTargetDataUnderMouse>(OwningAbility);
+	MyObj->MaxTraceRange = MaxTraceRange;
+	MyObj->bDrawDebugTrace = bDrawDebugTrace;
+	MyObj->bUsePawnViewPoint = bUsePawnViewPoint;
 	return MyObj;
 }
 
@@ -47,14 +50,34 @@ void UTargetDataUnderMouse::SendMouseCursorData()
 	
 	// Backstop removido - não é mais necessário com o trace da frente da câmera
 	
-	// Obter direção da câmera para manter o targeting baseado no crosshair
-	APlayerController* PC = Ability->GetCurrentActorInfo()->PlayerController.Get();
 	FVector CameraLocation;
 	FRotator ViewRot;
-	PC->GetPlayerViewPoint(CameraLocation, ViewRot);
 	
-	// Usar direção da câmera e começar um pouco na frente da câmera
-	FVector Start = CameraLocation + ViewRot.Vector() * 100.f; // 100cm na frente da câmera
+	// Escolher entre usar visão do PlayerController ou do Pawn
+	if (bUsePawnViewPoint)
+	{
+		// Usar visão do Pawn (ActorLocation + ControlRotation)
+		CameraLocation = RPGChar->GetActorLocation();
+		ViewRot = RPGChar->GetControlRotation();
+	}
+	else
+	{
+		// Usar visão do PlayerController (comportamento padrão)
+		APlayerController* PC = Ability->GetCurrentActorInfo()->PlayerController.Get();
+		if (PC)
+		{
+			PC->GetPlayerViewPoint(CameraLocation, ViewRot);
+		}
+		else
+		{
+			// Fallback para visão do Pawn se não houver PlayerController
+			CameraLocation = RPGChar->GetActorLocation();
+			ViewRot = RPGChar->GetControlRotation();
+		}
+	}
+	
+	// Usar direção da câmera/pawn e começar um pouco na frente
+	FVector Start = CameraLocation + ViewRot.Vector() * 100.f; // 100cm na frente
 	FVector Direction = ViewRot.Vector();
 	
 	// Usar MaxTraceRange configurado ou o padrão do personagem

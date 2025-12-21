@@ -17,7 +17,12 @@ class RPG_API UTargetDataUnderMouse : public UAbilityTask
 public:
 
 	UFUNCTION(BlueprintCallable, Category="Ability|Tasks", meta = (DisplayName = "TargetDataUnderMouse", HidePin = "OwningAbility", DefaultToSelf = "OwningAbility", BlueprintInternalUseOnly = "true"))
-	static UTargetDataUnderMouse* CreateTargetDataUnderMouse(UGameplayAbility* OwningAbility);
+	static UTargetDataUnderMouse* CreateTargetDataUnderMouse(
+		UGameplayAbility* OwningAbility,
+		float MaxTraceRange = 3000.f,
+		bool bDrawDebugTrace = false,
+		bool bUsePawnViewPoint = false
+	);
 
 	UPROPERTY(BlueprintAssignable)
 	FMouseTargetDataSignature ValidData;
@@ -26,15 +31,16 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ability|Tasks")
     bool bReplicateTargetData = false;
 
+private:
+
 	// Distância máxima do trace (em cm). Se <= 0, usa MaxTargetingRange do personagem
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ability|Tasks", meta = (ClampMin = "0.0"))
 	float MaxTraceRange = 3000.f;
 
 	// Se true, desenha debug do trace (linha e ponto de impacto)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ability|Tasks|Debug")
-	bool bDrawDebugTrace = true;
+	bool bDrawDebugTrace = false;
 
-private:
+	// Se true, usa a visão do Pawn (ActorLocation + ControlRotation); se false, usa PlayerController ViewPoint
+	bool bUsePawnViewPoint = false;
 
 	virtual void Activate() override;
 	void SendMouseCursorData();

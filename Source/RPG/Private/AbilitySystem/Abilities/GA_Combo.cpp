@@ -393,7 +393,7 @@ void UGA_Combo::DamageLocation(const FVector& ProjectileTargetLocation)
 }
 
 // === SISTEMA UNIFICADO: SPAWN DE PROJÉTIL ===
-void UGA_Combo::SpawnProjectile(const FVector& PlayerLocation, const FVector& ActorLocation, 
+void UGA_Combo::SpawnProjectile(const FVector& SpawnTargetLocation, 
                                 bool bUseManualSpawnOrigin, const FVector& ManualSpawnOrigin)
 {
 	const bool bIsServer = GetAvatarActorFromActorInfo()->HasAuthority();
@@ -424,48 +424,23 @@ void UGA_Combo::SpawnProjectile(const FVector& PlayerLocation, const FVector& Ac
 			SpawnOrigin.X, SpawnOrigin.Y, SpawnOrigin.Z);
 	}
 
-	// Escolher automaticamente qual localização usar baseado no contexto
-	FVector ProjectileTargetLocation = FVector::ZeroVector;
+	// Usar SpawnTargetLocation diretamente (flexível para Player ou IA)
+	FVector ProjectileTargetLocation = SpawnTargetLocation;
 	
-	if (IsPlayerController())
+	// Se SpawnTargetLocation for zero, usar fallback: direção frontal do personagem
+	if (ProjectileTargetLocation == FVector::ZeroVector)
 	{
-		// PLAYER: Usar PlayerLocation (mouse/crosshair)
-		ProjectileTargetLocation = PlayerLocation;
-		UE_LOG(LogTemp, Log, TEXT("[GA_Combo] Player - Usando PlayerLocation: (%.1f, %.1f, %.1f)"),
-			ProjectileTargetLocation.X, ProjectileTargetLocation.Y, ProjectileTargetLocation.Z);
-	}
-	else if (IsPartyAIController())
-	{
-		// IA: Usar ActorLocation (alvo de combate)
-		ProjectileTargetLocation = ActorLocation;
-		UE_LOG(LogTemp, Log, TEXT("[GA_Combo] AI - Usando ActorLocation: (%.1f, %.1f, %.1f)"),
-			ProjectileTargetLocation.X, ProjectileTargetLocation.Y, ProjectileTargetLocation.Z);
+		if (AActor* Avatar = GetAvatarActorFromActorInfo())
+		{
+			ProjectileTargetLocation = Avatar->GetActorLocation() + (Avatar->GetActorForwardVector() * 1000.0f);
+			UE_LOG(LogTemp, Log, TEXT("[GA_Combo] SpawnTargetLocation zero - Usando direção frontal: (%.1f, %.1f, %.1f)"),
+				ProjectileTargetLocation.X, ProjectileTargetLocation.Y, ProjectileTargetLocation.Z);
+		}
 	}
 	else
 	{
-		// Fallback: tentar usar PlayerLocation primeiro, depois ActorLocation
-		if (PlayerLocation != FVector::ZeroVector)
-		{
-			ProjectileTargetLocation = PlayerLocation;
-			UE_LOG(LogTemp, Log, TEXT("[GA_Combo] Fallback - Usando PlayerLocation: (%.1f, %.1f, %.1f)"),
-				ProjectileTargetLocation.X, ProjectileTargetLocation.Y, ProjectileTargetLocation.Z);
-		}
-		else if (ActorLocation != FVector::ZeroVector)
-		{
-			ProjectileTargetLocation = ActorLocation;
-			UE_LOG(LogTemp, Log, TEXT("[GA_Combo] Fallback - Usando ActorLocation: (%.1f, %.1f, %.1f)"),
-				ProjectileTargetLocation.X, ProjectileTargetLocation.Y, ProjectileTargetLocation.Z);
-		}
-		else
-		{
-			// Último fallback: direção frontal do personagem
-			if (AActor* Avatar = GetAvatarActorFromActorInfo())
-			{
-				ProjectileTargetLocation = Avatar->GetActorLocation() + (Avatar->GetActorForwardVector() * 1000.0f);
-				UE_LOG(LogTemp, Log, TEXT("[GA_Combo] Último Fallback - Direção Frontal: (%.1f, %.1f, %.1f)"),
-					ProjectileTargetLocation.X, ProjectileTargetLocation.Y, ProjectileTargetLocation.Z);
-			}
-		}
+		UE_LOG(LogTemp, Log, TEXT("[GA_Combo] Usando SpawnTargetLocation: (%.1f, %.1f, %.1f)"),
+			ProjectileTargetLocation.X, ProjectileTargetLocation.Y, ProjectileTargetLocation.Z);
 	}
 
 	// Se não usar projéteis, aplicar dano direto
