@@ -1,6 +1,7 @@
 #include "Character/Yoshino/YoshinoCharacter.h"
 
-AYoshinoCharacter::AYoshinoCharacter()
+AYoshinoCharacter::AYoshinoCharacter(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
 {
 	// Definir um ID único para a Yoshino
 	CharacterUniqueID = FName("Yoshino_ID");

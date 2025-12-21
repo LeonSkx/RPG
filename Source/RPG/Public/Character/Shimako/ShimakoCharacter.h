@@ -15,7 +15,7 @@ class RPG_API AShimakoCharacter : public ARPGCharacter
 	GENERATED_BODY()
 
 public:
-	AShimakoCharacter();
+	AShimakoCharacter(const FObjectInitializer& ObjectInitializer);
 
 protected:
 	virtual void BeginPlay() override;

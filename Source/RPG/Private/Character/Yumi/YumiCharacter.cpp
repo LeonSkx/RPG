@@ -1,7 +1,8 @@
 #include "Character/Yumi/YumiCharacter.h"
 // Base already includes CharacterClassInfo via RPGCharacterBase -> OK
 
-AYumiCharacter::AYumiCharacter()
+AYumiCharacter::AYumiCharacter(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
 {
     // Definir ID único para Yumi
     CharacterUniqueID = FName("Yumi_ID");

@@ -6,6 +6,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Character/RPGCustomMovementComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "AbilitySystem/Core/RPGAttributeSet.h"
 #include "Components/SceneComponent.h"
@@ -18,7 +19,8 @@
 #include "Engine/EngineTypes.h"
 #include "MotionWarpingComponent.h"
 
-ARPGCharacterBase::ARPGCharacterBase()
+ARPGCharacterBase::ARPGCharacterBase(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer.SetDefaultSubobjectClass<URPGCustomMovementComponent>(ACharacter::CharacterMovementComponentName))
 {
 	PrimaryActorTick.bCanEverTick = true;
 

@@ -15,7 +15,7 @@ class RPG_API AYoshinoCharacter : public ARPGCharacter
 	GENERATED_BODY()
 
 public:
-	AYoshinoCharacter();
+	AYoshinoCharacter(const FObjectInitializer& ObjectInitializer);
 
 protected:
 	virtual void BeginPlay() override;

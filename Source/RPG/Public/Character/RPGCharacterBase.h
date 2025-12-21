@@ -18,6 +18,7 @@ class UGameplayEffect;
 class UGameplayAbility;
 class UAnimMontage;
 class USkeletalMeshComponent;
+class URPGCustomMovementComponent;
 
 UCLASS(Abstract)
 class RPG_API ARPGCharacterBase : public ACharacter, public IAbilitySystemInterface, public ICombatInterface, public IGenericTeamAgentInterface
@@ -25,7 +26,7 @@ class RPG_API ARPGCharacterBase : public ACharacter, public IAbilitySystemInterf
 	GENERATED_BODY()
 
 public:
-	ARPGCharacterBase();
+	ARPGCharacterBase(const FObjectInitializer& ObjectInitializer);
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;

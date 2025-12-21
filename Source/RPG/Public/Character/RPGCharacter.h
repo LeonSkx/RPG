@@ -49,7 +49,7 @@ class RPG_API ARPGCharacter
     GENERATED_BODY()
 
 public:
-    ARPGCharacter();
+    ARPGCharacter(const FObjectInitializer& ObjectInitializer);
 
     virtual void PossessedBy(AController* NewController) override;
     virtual void UnPossessed() override;

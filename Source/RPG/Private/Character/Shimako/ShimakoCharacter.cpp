@@ -1,6 +1,7 @@
 #include "Character/Shimako/ShimakoCharacter.h"
 
-AShimakoCharacter::AShimakoCharacter()
+AShimakoCharacter::AShimakoCharacter(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
 {
     // Definir um ID único para a Shimako
     CharacterUniqueID = FName("Shimako_ID");

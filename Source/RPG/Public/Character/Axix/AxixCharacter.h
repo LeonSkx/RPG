@@ -15,7 +15,7 @@ class RPG_API AAxixCharacter : public ARPGCharacter
 	GENERATED_BODY()
 
 public:
-	AAxixCharacter();
+	AAxixCharacter(const FObjectInitializer& ObjectInitializer);
 
 protected:
 	virtual void BeginPlay() override;

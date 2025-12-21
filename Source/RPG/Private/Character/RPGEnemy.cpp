@@ -20,7 +20,8 @@
 #include "Party/PartySubsystem.h"
 
 
-ARPGEnemy::ARPGEnemy()
+ARPGEnemy::ARPGEnemy(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
 {
 	Team = ERPGTeam::Enemy;
 

@@ -1,6 +1,7 @@
 #include "Character/Axix/AxixCharacter.h"
 
-AAxixCharacter::AAxixCharacter()
+AAxixCharacter::AAxixCharacter(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
 {
 	// Definir um ID único para o Axix
 	CharacterUniqueID = FName("Axix_ID");

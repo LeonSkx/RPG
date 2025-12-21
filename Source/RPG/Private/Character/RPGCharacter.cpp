@@ -50,7 +50,8 @@
 // RPG
 #include "RPG/RPG.h"
 
-ARPGCharacter::ARPGCharacter()
+ARPGCharacter::ARPGCharacter(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
 {
 	Team = ERPGTeam::Player;
 	

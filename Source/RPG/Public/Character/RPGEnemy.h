@@ -25,7 +25,7 @@ class RPG_API ARPGEnemy : public ARPGCharacterBase, public IEnemyInterface
 public:
 
 	
-	ARPGEnemy();
+	ARPGEnemy(const FObjectInitializer& ObjectInitializer);
 	virtual void PossessedBy(AController* NewController) override;
 
 	

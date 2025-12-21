@@ -16,7 +16,7 @@ class RPG_API AYumiCharacter : public ARPGCharacter
     GENERATED_BODY()
 
 public:
-    AYumiCharacter();
+    AYumiCharacter(const FObjectInitializer& ObjectInitializer);
 
 protected:
     virtual void BeginPlay() override;
