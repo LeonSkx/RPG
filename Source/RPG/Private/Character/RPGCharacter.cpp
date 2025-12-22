@@ -805,6 +805,13 @@ void ARPGCharacter::OnAimingTagChanged(const FGameplayTag Tag, int32 NewCount)
 	const bool bIsAiming = NewCount != 0;
 	FVector Goal = bIsAiming ? CameraAimLocalOffset : CameraDefaultLocalOffset;
 	LerpCameraToLocalOffsetLocation(Goal);
+
+	// Ajustar rotação do personagem: quando mirando, gira junto com a câmera
+	bUseControllerRotationYaw = bIsAiming;
+	if (GetCharacterMovement())
+	{
+		GetCharacterMovement()->bOrientRotationToMovement = !bIsAiming;
+	}
 }
 
 void ARPGCharacter::LerpCameraToLocalOffsetLocation(const FVector& Goal)
