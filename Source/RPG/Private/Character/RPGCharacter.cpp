@@ -36,7 +36,6 @@
 #include "Game/RPGGameModeBase.h"
 #include "Party/PartySubsystem.h"
 #include "Progression/ProgressionSubsystem.h"
-#include "RPGGameplayTags.h"
 
 // Inventory & Equipment
 #include "Inventory/Equipment/EquipmentComponent.h"
@@ -239,8 +238,6 @@ void ARPGCharacter::InitAbilityActorInfo()
 	{
 		return;
 	}
-
-	RegisterGameplayTagEvents();
 	
 	if (HasAuthority() && AttributeSet && !bAttributesInitialized)
 	{
@@ -255,16 +252,6 @@ void ARPGCharacter::InitAbilityActorInfo()
 	}
 }
 
-void ARPGCharacter::RegisterGameplayTagEvents()
-{
-	if (!AbilitySystemComponent)
-	{
-		return;
-	}
-
-	AbilitySystemComponent->RegisterGameplayTagEvent(FRPGGameplayTags::Get().Debuff_Stun, EGameplayTagEventType::NewOrRemoved)
-		.AddUObject(this, &ARPGCharacter::StunTagChanged);
-}
 
 void ARPGCharacter::HandleItemEquipped(EEquipmentSlot Slot, UEquippedItem* EquippedItem)
 {
@@ -567,101 +554,6 @@ void ARPGCharacter::OnCapsuleOverlapEnd(UPrimitiveComponent* OverlappedComp, AAc
 	{
 		// Overlap ended with BaseItem
 	}
-}
-
-FVector ARPGCharacter::GetCombatSocketLocation_Implementation(const FGameplayTag& MontageTag)
-{
-	if (MontageTag == FRPGGameplayTags::Get().Montage_Attack_Weapon)
-	{
-        TArray<FName> SocketNames;
-        if (EquipmentComponent)
-        {
-            if (UEquippedItem* EquippedWeapon = EquipmentComponent->GetEquippedItem(EEquipmentSlot::Weapon))
-            {
-                if (UItemDataAsset* ItemData = EquippedWeapon->GetItemData())
-                {
-                    // ✅ APENAS DamageSockets do item (sem misturar com EquipmentComponent)
-                    for (const FName& SocketName : ItemData->DamageSockets)
-                    {
-                        if (!SocketName.IsNone())
-                        {
-                            SocketNames.Add(SocketName);
-                        }
-                    }
-                }
-            }
-        }
-        
-        // PRIORIDADE 1: Procurar DamageSockets na PRIMEIRA ARMA
-        if (UMeshComponent** MeshCompPtr = EquippedMeshComponents.Find(EEquipmentSlot::Weapon))
-        {
-            if (USkeletalMeshComponent* SkelComp = Cast<USkeletalMeshComponent>(*MeshCompPtr))
-            {
-                for (const FName& Name : SocketNames)
-                {
-                    if (!Name.IsNone() && SkelComp->DoesSocketExist(Name))
-                    {
-                        return SkelComp->GetSocketLocation(Name);
-                    }
-                }
-            }
-        }
-
-        // PRIORIDADE 2: Procurar DamageSockets na SEGUNDA ARMA (se existir)
-        if (EquippedExtraMeshes.Num() > 0)
-        {
-            for (const FEquippedExtraMeshRef& ExtraMeshRef : EquippedExtraMeshes)
-            {
-                if (ExtraMeshRef.Slot == EEquipmentSlot::Weapon && ExtraMeshRef.Mesh)
-                {
-                    if (USkeletalMeshComponent* ExtraSkelComp = Cast<USkeletalMeshComponent>(ExtraMeshRef.Mesh))
-                    {
-                        for (const FName& Name : SocketNames)
-                        {
-                            if (!Name.IsNone() && ExtraSkelComp->DoesSocketExist(Name))
-                            {
-                                return ExtraSkelComp->GetSocketLocation(Name);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // PRIORIDADE 3: Procurar DamageSockets no personagem principal (fallback)
-        if (USkeletalMeshComponent* SkelMesh = GetMesh())
-        {
-            for (const FName& Name : SocketNames)
-            {
-                if (!Name.IsNone() && SkelMesh->DoesSocketExist(Name))
-                {
-                    return SkelMesh->GetSocketLocation(Name);
-                }
-            }
-        }
-	}
-	else if (MontageTag == FRPGGameplayTags::Get().Montage_Attack_RightHand)
-	{
-		if (USkeletalMeshComponent* MeshComp = GetMesh())
-		{
-			if (MeshComp->DoesSocketExist(FName("RightHandSocket")))
-			{
-				return MeshComp->GetSocketLocation(FName("RightHandSocket"));
-			}
-		}
-	}
-	else if (MontageTag == FRPGGameplayTags::Get().Montage_Attack_LeftHand)
-	{
-		if (USkeletalMeshComponent* MeshComp = GetMesh())
-		{
-			if (MeshComp->DoesSocketExist(FName("LeftHandSocket")))
-			{
-				return MeshComp->GetSocketLocation(FName("LeftHandSocket"));
-			}
-		}
-	}
-	
-	return Super::GetCombatSocketLocation_Implementation(MontageTag);
 }
 
 // UpdateTargetingBackstop removido - não é mais necessário

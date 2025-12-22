@@ -147,8 +147,6 @@ public:
     virtual int32 GetSpellPoints_Implementation() const override;
     virtual void LevelUp_Implementation() override;
 
-    // Combat Interface
-    virtual FVector GetCombatSocketLocation_Implementation(const FGameplayTag& MontageTag) override;
 
     // Party Interface
     virtual void SetCombatTarget_Implementation(AActor* InCombatTarget) override;
@@ -252,8 +250,6 @@ protected:
 
 private:
     virtual void InitAbilityActorInfo() override;
-
-    void RegisterGameplayTagEvents();
 
     FTimerHandle DeathTimer;
     bool bAttributesInitialized = false;
