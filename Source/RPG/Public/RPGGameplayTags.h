@@ -86,6 +86,9 @@ public:
 	// Effects Tags
 	FGameplayTag Effects_HitReact;
 
+	// Status Tags
+	FGameplayTag Status_Aiming;
+
 	// Combat Sockets
 	FGameplayTag CombatSocket_Weapon;
 

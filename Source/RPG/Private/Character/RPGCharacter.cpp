@@ -13,6 +13,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "TimerManager.h"
 
 // Components
 #include "Components/BoxComponent.h"
@@ -26,6 +27,7 @@
 #include "AbilitySystemComponent.h"
 #include "AbilitySystem/Core/RPGAbilitySystemComponent.h"
 #include "AbilitySystem/Core/RPGAttributeSet.h"
+#include "RPGGameplayTags.h"
 
 // AI & Behavior
 #include "AI/RPGPartyAIController.h"
@@ -179,10 +181,23 @@ void ARPGCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 	if (AbilitySystemComponent)
 	{
+		// Limpar listener da tag Status_Aiming
+		if (AimingTagDelegateHandle.IsValid())
+		{
+			AbilitySystemComponent->RegisterGameplayTagEvent(FRPGGameplayTags::Get().Status_Aiming).Remove(AimingTagDelegateHandle);
+			AimingTagDelegateHandle.Reset();
+		}
+		
 		AbilitySystemComponent->CancelAllAbilities();
 		AbilitySystemComponent->ClearAllAbilities();
 		AbilitySystemComponent->DestroyComponent();
 		AbilitySystemComponent = nullptr;
+	}
+
+	// Limpar timer de lerp da câmera
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(CameraLerpTimerHandle);
 	}
 
 	// AbilityTargetBackstop removido - não é mais necessário
@@ -237,6 +252,15 @@ void ARPGCharacter::InitAbilityActorInfo()
 	if (!AbilitySystemComponent)
 	{
 		return;
+	}
+	
+	// Registrar listener para a tag Status_Aiming para ativar lerp da câmera automaticamente
+	if (!AimingTagDelegateHandle.IsValid())
+	{
+		AimingTagDelegateHandle = AbilitySystemComponent->RegisterGameplayTagEvent(
+			FRPGGameplayTags::Get().Status_Aiming,
+			EGameplayTagEventType::NewOrRemoved
+		).AddUObject(this, &ARPGCharacter::OnAimingTagChanged);
 	}
 	
 	if (HasAuthority() && AttributeSet && !bAttributesInitialized)
@@ -754,6 +778,75 @@ void ARPGCharacter::SetPlayerClass(EPlayerClass NewClass)
 		OnPlayerClassChanged.Broadcast(NewClass);
 		UE_LOG(LogTemp, Log, TEXT("PlayerClass alterada para: %d"), (int32)NewClass);
 	}
+}
+
+// === CAMERA LERP SYSTEM ===
+
+void ARPGCharacter::OnAimStateChanged(bool bIsAiming)
+{
+	// Aplicar/remover tag de aim (o lerp da câmera será ativado automaticamente pelo listener)
+	if (AbilitySystemComponent)
+	{
+		const FGameplayTag AimTag = FRPGGameplayTags::Get().Status_Aiming;
+		if (bIsAiming)
+		{
+			AbilitySystemComponent->AddLooseGameplayTag(AimTag);
+		}
+		else
+		{
+			AbilitySystemComponent->RemoveLooseGameplayTag(AimTag);
+		}
+	}
+}
+
+void ARPGCharacter::OnAimingTagChanged(const FGameplayTag Tag, int32 NewCount)
+{
+	// Ativar/desativar lerp da câmera quando a tag Status_Aiming muda
+	const bool bIsAiming = NewCount != 0;
+	FVector Goal = bIsAiming ? CameraAimLocalOffset : CameraDefaultLocalOffset;
+	LerpCameraToLocalOffsetLocation(Goal);
+}
+
+void ARPGCharacter::LerpCameraToLocalOffsetLocation(const FVector& Goal)
+{
+	if (!FollowCamera || !GetWorld())
+	{
+		return;
+	}
+
+	GetWorld()->GetTimerManager().ClearTimer(CameraLerpTimerHandle);
+	CameraLerpTimerHandle = GetWorld()->GetTimerManager().SetTimerForNextTick(
+		FTimerDelegate::CreateUObject(this, &ARPGCharacter::TickCameraLocalOffsetLerp, Goal)
+	);
+}
+
+void ARPGCharacter::TickCameraLocalOffsetLerp(FVector Goal)
+{
+	if (!FollowCamera || !GetWorld())
+	{
+		return;
+	}
+
+	FVector CurrentLocalOffset = FollowCamera->GetRelativeLocation();
+	
+	// Se já está próximo o suficiente, definir posição final e parar
+	if (FVector::Dist(CurrentLocalOffset, Goal) < 1.f)
+	{
+		FollowCamera->SetRelativeLocation(Goal);
+		GetWorld()->GetTimerManager().ClearTimer(CameraLerpTimerHandle);
+		return;
+	}
+
+	// Calcular lerp
+	float LerpAlpha = FMath::Clamp(GetWorld()->GetDeltaSeconds() * CameraLerpSpeed, 0.f, 1.f);
+	FVector NewLocalOffset = FMath::Lerp(CurrentLocalOffset, Goal, LerpAlpha);
+	FollowCamera->SetRelativeLocation(NewLocalOffset);
+	
+	// Agendar próximo frame
+	GetWorld()->GetTimerManager().ClearTimer(CameraLerpTimerHandle);
+	CameraLerpTimerHandle = GetWorld()->GetTimerManager().SetTimerForNextTick(
+		FTimerDelegate::CreateUObject(this, &ARPGCharacter::TickCameraLocalOffsetLerp, Goal)
+	);
 }
 
 

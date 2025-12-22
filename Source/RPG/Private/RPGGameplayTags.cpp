@@ -305,4 +305,13 @@ void FRPGGameplayTags::InitializeNativeGameplayTags()
 		FName("Effects.HitReact"),
 		FString("Tag granted when Hit Reacting")
 		);
+
+	/*
+	 * Status Tags
+	 */
+
+	GameplayTags.Status_Aiming = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Status.Aiming"),
+		FString("Tag granted when character is aiming")
+		);
 }

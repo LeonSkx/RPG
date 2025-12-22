@@ -132,6 +132,10 @@ public:
     UFUNCTION(NetMulticast, Reliable)
     void MulticastLevelUpParticles() const;
 
+    // Camera Lerp System
+    UFUNCTION(BlueprintCallable, Category = "Camera|Lerp")
+    void OnAimStateChanged(bool bIsAiming);
+
     // Interfaces ---------------------------------------------------
 
     // Player Interface
@@ -201,7 +205,16 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
     TObjectPtr<UCameraComponent> FollowCamera;
 
-    
+    // Camera Lerp System
+    UPROPERTY(EditDefaultsOnly, Category = "Camera|Lerp")
+    FVector CameraAimLocalOffset = FVector::ZeroVector;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Camera|Lerp")
+    float CameraLerpSpeed = 20.f;
+
+    // Posição padrão da câmera (usada quando não está mirando)
+    UPROPERTY(EditDefaultsOnly, Category = "Camera|Lerp")
+    FVector CameraDefaultLocalOffset = FVector(0.0f, 110.0f, 65.0f);
 
     // AbilityTargetBackstop removido - não é mais necessário
 
@@ -250,6 +263,14 @@ protected:
 
 private:
     virtual void InitAbilityActorInfo() override;
+
+    // Camera Lerp System
+    FTimerHandle CameraLerpTimerHandle;
+    void LerpCameraToLocalOffsetLocation(const FVector& Goal);
+    void TickCameraLocalOffsetLerp(FVector Goal);
+    void OnAimingTagChanged(const FGameplayTag Tag, int32 NewCount);
+    
+    FDelegateHandle AimingTagDelegateHandle;
 
     FTimerHandle DeathTimer;
     bool bAttributesInitialized = false;

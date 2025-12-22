@@ -3,6 +3,7 @@
 #include "Character/Animation/RPGAnimInstance.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
+#include "RPGGameplayTags.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -15,8 +16,11 @@ void URPGAnimInstance::NativeInitializeAnimation()
 		OwnerMovementComp = OwnerCharacter->GetCharacterMovement();
 	}
 
-	// Aim tag registration is optional - call RegisterAimTag() from Blueprint or C++ if needed
-	bIsAimming = false;
+	UAbilitySystemComponent* OwnerASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TryGetPawnOwner());
+	if (OwnerASC)
+	{
+		OwnerASC->RegisterGameplayTagEvent(FRPGGameplayTags::Get().Status_Aiming).AddUObject(this, &URPGAnimInstance::OwnerAimTagChanged);
+	}
 }
 
 void URPGAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
