@@ -1,11 +1,9 @@
 #include "Inventory/Equipment/EquipmentComponent.h"
 #include "Inventory/Equipment/EquippedItem.h"
 #include "Inventory/Items/ItemDataAsset.h"
-#include "Game/RPGGameInstance.h"
-#include "Kismet/GameplayStatics.h"
-#include "Player/RPGPlayerController.h"
-#include "Progression/ProgressionSubsystem.h"
+#include "Interaction/CombatInterface.h"
 #include "Character/RPGCharacter.h"
+#include "Character/PlayerClassInfo.h"
 
 UEquipmentComponent::UEquipmentComponent()
 {
@@ -22,65 +20,56 @@ void UEquipmentComponent::BeginPlay()
 
 bool UEquipmentComponent::EquipItemFromInventory(const FInventoryItem& InventoryItem, EEquipmentSlot Slot)
 {
-    if (!InventoryItem.IsValid())
+    // Validação inicial do item
+    if (!InventoryItem.IsValid() || !InventoryItem.ItemData)
     {
-        UE_LOG(LogTemp, Warning, TEXT("[EquipItem] Item inválido"));
+        UE_LOG(LogTemp, Warning, TEXT("[EquipItem] Item inválido ou ItemData é nullptr"));
         return false;
     }
 
-    if (!InventoryItem.ItemData)
+    // Validação do Owner
+    AActor* Owner = GetOwner();
+    if (!IsValid(Owner))
     {
-        UE_LOG(LogTemp, Warning, TEXT("[EquipItem] ItemData é nullptr"));
+        UE_LOG(LogTemp, Warning, TEXT("[EquipItem] Owner inválido"));
         return false;
     }
 
-    // Obter o nível do personagem
-    URPGGameInstance* GameInstance = Cast<URPGGameInstance>(UGameplayStatics::GetGameInstance(this));
-    if (!GameInstance)
+    // Obter nível do personagem via ICombatInterface (reduz acoplamento)
+    int32 CharacterLevel = 1;
+    if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(Owner))
     {
-        UE_LOG(LogTemp, Warning, TEXT("[EquipItem] GameInstance não encontrado"));
+        CharacterLevel = ICombatInterface::Execute_GetCharacterLevel(Owner);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[EquipItem] Owner não implementa ICombatInterface"));
         return false;
     }
-    UProgressionSubsystem* ProgressionSubsystem = GameInstance->GetSubsystem<UProgressionSubsystem>();
-    if (!ProgressionSubsystem)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("[EquipItem] ProgressionSubsystem não encontrado"));
-        return false;
-    }
-    AController* Controller = UGameplayStatics::GetPlayerController(this, 0); // Supondo um único jogador
-    if (!Controller)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("[EquipItem] Controller não encontrado"));
-        return false;
-    }
-
-    const ARPGCharacter* Character = Cast<ARPGCharacter>(Controller->GetPawn());
-    if (!Character)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("[EquipItem] Character não encontrado ou não é ARPGCharacter"));
-        return false;
-    }
-
-    // Verificar restrição de classe
-    if (InventoryItem.ItemData->AllowedClasses.Num() > 0)
-    {
-        EPlayerClass CharacterClass = Character->GetPlayerClass();
-        if (!InventoryItem.ItemData->CanClassUse(CharacterClass))
-        {
-            UE_LOG(LogTemp, Warning, TEXT("[EquipItem] Personagem classe '%d' não pode usar este item (AllowedClasses: %d)"), 
-                (int32)CharacterClass, InventoryItem.ItemData->AllowedClasses.Num());
-            return false;
-        }
-    }
-
-    const int32 PlayerLevel = ProgressionSubsystem->GetCharacterLevel(Character);
 
     // Verificar o nível requerido
-    if (PlayerLevel < InventoryItem.ItemData->RequiredLevel)
+    if (CharacterLevel < InventoryItem.ItemData->RequiredLevel)
     {
         UE_LOG(LogTemp, Warning, TEXT("[EquipItem] Nível insuficiente: Personagem=%d, Requerido=%d"), 
-            PlayerLevel, InventoryItem.ItemData->RequiredLevel);
+            CharacterLevel, InventoryItem.ItemData->RequiredLevel);
         return false;
+    }
+
+    // Verificar restrição de classe (se aplicável)
+    if (InventoryItem.ItemData->AllowedClasses.Num() > 0)
+    {
+        // Tentar obter PlayerClass via cast para ARPGCharacter (melhor que buscar Controller)
+        const ARPGCharacter* RPGCharacter = Cast<ARPGCharacter>(Owner);
+        if (RPGCharacter)
+        {
+            EPlayerClass CharacterClass = RPGCharacter->GetPlayerClass();
+            if (!InventoryItem.ItemData->CanClassUse(CharacterClass))
+            {
+                UE_LOG(LogTemp, Warning, TEXT("[EquipItem] Personagem classe '%d' não pode usar este item (AllowedClasses: %d)"), 
+                    (int32)CharacterClass, InventoryItem.ItemData->AllowedClasses.Num());
+                return false;
+            }
+        }
     }
     
     // Validar se o item pode ser equipado neste slot
@@ -108,8 +97,11 @@ bool UEquipmentComponent::EquipItemFromInventory(const FInventoryItem& Inventory
     // Inicializar o item equipado
     NewEquippedItem->InitializeFromInventoryItem(InventoryItem, Slot);
 
-    // Aplicar stats do item ao personagem
-    NewEquippedItem->ApplyStatsToCharacter(GetOwner());
+    // Aplicar stats do item ao personagem (com validação)
+    if (IsValid(Owner))
+    {
+        NewEquippedItem->ApplyStatsToCharacter(Owner);
+    }
 
     // Armazenar o item equipado
     EquippedItems.Add(Slot, NewEquippedItem);
@@ -133,8 +125,12 @@ FInventoryItem UEquipmentComponent::UnequipItem(EEquipmentSlot Slot)
     // Converter de volta para FInventoryItem
     FInventoryItem UnequippedInventoryItem = ItemToUnequip->ConvertBackToInventoryItem();
 
-    // Remover stats do personagem
-    ItemToUnequip->RemoveStatsFromCharacter(GetOwner());
+    // Remover stats do personagem (com validação)
+    AActor* Owner = GetOwner();
+    if (IsValid(Owner))
+    {
+        ItemToUnequip->RemoveStatsFromCharacter(Owner);
+    }
 
     // Desanexar visualmente
     ItemToUnequip->DetachFromSocket();
@@ -177,9 +173,9 @@ TArray<UEquippedItem*> UEquipmentComponent::GetAllEquippedItems() const
     return AllItems;
 }
 
-void UEquipmentComponent::SetSocketNamesForSlot(EEquipmentSlot Slot, const TArray<FName>& SocketNames, const FTransform& Offset)
+void UEquipmentComponent::SetSocketNamesForSlot(EEquipmentSlot Slot, const TArray<FName>& SocketNames)
 {
-    SocketMappings.Add(Slot, FSocketMapping(SocketNames, Offset));
+    SocketMappings.Add(Slot, FSocketMapping(SocketNames));
 }
 
 void UEquipmentComponent::UpgradeEquippedItem(EEquipmentSlot Slot, int32 NewLevel)
@@ -281,44 +277,32 @@ bool UEquipmentComponent::CanEquipItemInSlot(const FInventoryItem& Item, EEquipm
         return false;
     }
 
+    // Map estático para mapear categoria para slot (simplifica switch cases)
+    static const TMap<EItemCategory, EEquipmentSlot> CategoryToSlotMap = {
+        {EItemCategory::Weapon, EEquipmentSlot::Weapon},
+        {EItemCategory::Armor, EEquipmentSlot::Armor},
+        {EItemCategory::Accessory, EEquipmentSlot::Accessory},
+        {EItemCategory::Boots, EEquipmentSlot::Boots},
+        {EItemCategory::Ring, EEquipmentSlot::Ring}
+    };
+
     // Verificar se é um item equipável por categoria
     const EItemCategory Cat = Item.ItemData->ItemCategory;
-    const bool bEquipCategory = (Cat == EItemCategory::Weapon || Cat == EItemCategory::Accessory || Cat == EItemCategory::Ring || Cat == EItemCategory::Armor || Cat == EItemCategory::Boots);
-    if (!bEquipCategory)
+    if (!CategoryToSlotMap.Contains(Cat))
     {
         UE_LOG(LogTemp, Warning, TEXT("[CanEquipItemInSlot] Categoria '%d' não é equipável"), (int32)Cat);
         return false;
     }
 
-    // Verificar compatibilidade do tipo com o slot
-    bool bCanEquip = false;
-    switch (Slot)
+    // Verificar compatibilidade do tipo com o slot usando o map
+    const EEquipmentSlot* ExpectedSlot = CategoryToSlotMap.Find(Cat);
+    if (!ExpectedSlot)
     {
-        case EEquipmentSlot::Weapon:
-            bCanEquip = Item.ItemData->ItemCategory == EItemCategory::Weapon;
-            break;
-            
-        case EEquipmentSlot::Armor:
-            bCanEquip = Item.ItemData->ItemCategory == EItemCategory::Armor;
-            break;
-            
-        case EEquipmentSlot::Accessory:
-            bCanEquip = Item.ItemData->ItemCategory == EItemCategory::Accessory;
-            break;
-            
-        case EEquipmentSlot::Boots:
-            bCanEquip = Item.ItemData->ItemCategory == EItemCategory::Boots;
-            break;
-            
-        case EEquipmentSlot::Ring:
-            bCanEquip = Item.ItemData->ItemCategory == EItemCategory::Ring;
-            break;
-            
-        default:
-            UE_LOG(LogTemp, Warning, TEXT("[CanEquipItemInSlot] Slot inválido: %d"), (int32)Slot);
-            return false;
+        return false;
     }
 
+    const bool bCanEquip = (*ExpectedSlot == Slot);
+    
     if (!bCanEquip)
     {
         UE_LOG(LogTemp, Warning, TEXT("[CanEquipItemInSlot] Categoria '%d' não corresponde ao slot '%d'"), 
@@ -335,25 +319,16 @@ EEquipmentSlot UEquipmentComponent::DetermineSlotForItem(const FInventoryItem& I
         return EEquipmentSlot::Weapon; // Default
     }
 
-    // Determinar slot baseado no tipo do item
-    switch (Item.ItemData->ItemCategory)
-    {
-        case EItemCategory::Weapon:
-            return EEquipmentSlot::Weapon;
-            
-        case EItemCategory::Armor:
-            return EEquipmentSlot::Armor;
-            
-        case EItemCategory::Accessory:
-            return EEquipmentSlot::Accessory;
-            
-        case EItemCategory::Boots:
-            return EEquipmentSlot::Boots;
-            
-        case EItemCategory::Ring:
-            return EEquipmentSlot::Ring;
-            
-        default:
-            return EEquipmentSlot::Weapon; // Default
-    }
+    // Map estático para mapear categoria para slot (reutiliza a mesma lógica)
+    static const TMap<EItemCategory, EEquipmentSlot> CategoryToSlotMap = {
+        {EItemCategory::Weapon, EEquipmentSlot::Weapon},
+        {EItemCategory::Armor, EEquipmentSlot::Armor},
+        {EItemCategory::Accessory, EEquipmentSlot::Accessory},
+        {EItemCategory::Boots, EEquipmentSlot::Boots},
+        {EItemCategory::Ring, EEquipmentSlot::Ring}
+    };
+
+    // Determinar slot baseado no tipo do item usando o map
+    const EEquipmentSlot* FoundSlot = CategoryToSlotMap.Find(Item.ItemData->ItemCategory);
+    return FoundSlot ? *FoundSlot : EEquipmentSlot::Weapon; // Default se não encontrado
 } 

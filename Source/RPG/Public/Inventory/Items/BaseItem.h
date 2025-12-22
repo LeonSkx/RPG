@@ -9,7 +9,8 @@
 
 class UStaticMeshComponent;
 class USphereComponent;
-class UParticleSystemComponent;
+class UNiagaraComponent;
+class UNiagaraSystem;
 class ARPGCharacterBase;
 
 /**
@@ -39,9 +40,21 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     USphereComponent* CollisionComponent;
     
-    // Efeito de partícula para destaque
+    // Efeito Niagara para destaque
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-    UParticleSystemComponent* GlowEffect;
+    UNiagaraComponent* GlowEffect;
+
+    // Asset do sistema Niagara para o efeito de brilho (editável no Blueprint)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item|Visual")
+    TObjectPtr<UNiagaraSystem> GlowEffectAsset;
+
+    // Se verdadeiro, usa delay antes de destruir o actor quando coletado
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item|Destroy")
+    bool bUseDestroyDelay = false;
+
+    // Delay em segundos antes de destruir o actor (usado se bUseDestroyDelay = true)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item|Destroy", meta = (EditCondition = "bUseDestroyDelay", ClampMin = "0.0"))
+    float DestroyDelay = 1.0f;
     
     // Dados do item (definidos em blueprints/instâncias)
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item")
@@ -136,6 +149,10 @@ public:
     virtual void OnPickedUp(AActor* Collector);
 
     virtual void OnDropped();
+
+private:
+    // Função chamada após o delay para destruir o actor
+    void DelayedDestroy();
 
     // --- Setters ---
     UFUNCTION(BlueprintCallable, Category = "Item") // Expor ao Blueprint opcionalmente

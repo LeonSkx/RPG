@@ -30,17 +30,12 @@ struct FSocketMapping
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Equipment|Sockets")
     TArray<FName> SocketNames;
 
-    // Transform offset relativo ao socket
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Equipment|Sockets")
-    FTransform SocketOffset;
-
     FSocketMapping()
     {
-        SocketOffset = FTransform();
     }
 
-    FSocketMapping(const TArray<FName>& InSocketNames, const FTransform& InOffset = FTransform())
-        : SocketNames(InSocketNames), SocketOffset(InOffset) {}
+    FSocketMapping(const TArray<FName>& InSocketNames)
+        : SocketNames(InSocketNames) {}
 };
 
 
@@ -106,7 +101,7 @@ public:
      * Configura os sockets para um slot (primeiro = principal, seguintes = alternativos)
      */
     UFUNCTION(BlueprintCallable, Category="Equipment|Sockets")
-    void SetSocketNamesForSlot(EEquipmentSlot Slot, const TArray<FName>& SocketNames, const FTransform& Offset = FTransform());
+    void SetSocketNamesForSlot(EEquipmentSlot Slot, const TArray<FName>& SocketNames);
 
     // Retorna o principal + alternativos (na ordem), como FNames. Vazio se nenhum definido
     UFUNCTION(BlueprintPure, Category="Equipment|Sockets")

@@ -4,7 +4,8 @@
 #include "UObject/Object.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/SphereComponent.h"
-#include "Particles/ParticleSystemComponent.h"
+#include "NiagaraComponent.h"
+#include "NiagaraSystem.h"
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
 #include "Character/RPGCharacterBase.h"
@@ -14,6 +15,7 @@
 #include "Inventory/Core/InventorySubsystem.h"
 #include "Inventory/Items/ItemDataAsset.h"
 #include "Engine/Engine.h"
+#include "Engine/World.h"
 
 // Construtor
 ABaseItem::ABaseItem()
@@ -33,8 +35,8 @@ ABaseItem::ABaseItem()
     MeshComponent->SetupAttachment(RootComponent);
     MeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     
-    // Criar o sistema de partículas para destaque visual
-    GlowEffect = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("GlowEffect"));
+    // Criar o sistema Niagara para destaque visual
+    GlowEffect = CreateDefaultSubobject<UNiagaraComponent>(TEXT("GlowEffect"));
     GlowEffect->SetupAttachment(RootComponent);
     GlowEffect->SetAutoActivate(false);
     
@@ -74,6 +76,12 @@ void ABaseItem::BeginPlay()
 
     // Inicializa a mesh a partir do ItemData
     InitializeFromItemData();
+
+    // Configurar o asset do Niagara System no componente (se foi definido no Blueprint/Editor)
+    if (GlowEffect && GlowEffectAsset)
+    {
+        GlowEffect->SetAsset(GlowEffectAsset);
+    }
 
     // Lógica original de bind de overlap
     if (CollisionComponent)
@@ -117,6 +125,12 @@ void ABaseItem::SetGlowEffectActive(bool bActive)
     }
 }
 
+// Função chamada após o delay para destruir o actor
+void ABaseItem::DelayedDestroy()
+{
+    Destroy();
+}
+
 // Chamado quando o item é coletado
 void ABaseItem::OnPickedUp(AActor* Collector)
 {
@@ -153,8 +167,38 @@ void ABaseItem::OnPickedUp(AActor* Collector)
     // Notificar o personagem sobre a tentativa de coleta e Destruir o ator APENAS se a adição foi bem-sucedida
     if (bSuccessfullyAdded)
     {
-        // Notificação ao personagem removida
-        Destroy();
+        // Verificar se deve usar delay antes de destruir (para dar tempo ao efeito Niagara tocar)
+        if (bUseDestroyDelay && DestroyDelay > 0.0f)
+        {
+            // Esconder a mesh
+            if (MeshComponent)
+            {
+                MeshComponent->SetVisibility(false);
+            }
+            
+            // Desabilitar colisão para evitar novas interações
+            if (CollisionComponent)
+            {
+                CollisionComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+            }
+            
+            // Agendar destruição após o delay (o Niagara continuará tocando durante esse tempo)
+            if (UWorld* World = GetWorld())
+            {
+                FTimerHandle DestroyTimerHandle;
+                World->GetTimerManager().SetTimer(DestroyTimerHandle, this, &ABaseItem::DelayedDestroy, DestroyDelay, false);
+            }
+            else
+            {
+                // Fallback: destruir imediatamente se não houver World
+                Destroy();
+            }
+        }
+        else
+        {
+            // Destruir imediatamente se não usar delay
+            Destroy();
+        }
     }
     // Se não foi adicionado com sucesso (inventário cheio, erro, ou bAddToInventoryOnPickup=false), o item permanece no mundo.
 }
