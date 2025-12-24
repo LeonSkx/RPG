@@ -86,7 +86,7 @@ ARPGCharacter::ARPGCharacter(const FObjectInitializer& ObjectInitializer)
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
 	FollowCamera->FieldOfView = 60.f;
-	FollowCamera->SetRelativeLocation(FVector(0.0f, 110.0f, 65.0f));
+	FollowCamera->SetRelativeLocation(FVector(50.0f, 0.0f, 100.0f));
 
 
 
