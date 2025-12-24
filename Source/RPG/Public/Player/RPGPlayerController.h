@@ -24,14 +24,8 @@ class RPG_API ARPGPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 
-public:
-	ARPGPlayerController();
-	virtual void PlayerTick(float DeltaTime) override;
-
-
-
 protected:
-	virtual void BeginPlay() override;
+
 	virtual void SetupInputComponent() override;
 	virtual void OnPossess(APawn* InPawn) override;
 
@@ -47,20 +41,16 @@ private:
 	/** Look input action (camera rotation) */
 	UPROPERTY(EditAnywhere, Category="Input")
 	TObjectPtr<UInputAction> LookAction;
+	
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> JumpAction;
 
-	/** Shift (e.g. sprint) input action */
-	UPROPERTY(EditAnywhere, Category="Input")
-	TObjectPtr<UInputAction> ShiftAction;
+	void Jump();
+	void StopJumping();
+	void Move(const FInputActionValue& Value);
+	void Look(const FInputActionValue& Value);
 
-	/** Handle movement input */
-	void Move(const FInputActionValue& InputActionValue);
-
-	/** Handle look (camera) input */
-	void Look(const FInputActionValue& InputActionValue);
-
-	void ShiftPressed()  { bShiftKeyDown = true; }
-	void ShiftReleased() { bShiftKeyDown = false; }
-	bool bShiftKeyDown = false;
+    
 
 	/** Ability input delegates */
 	void AbilityInputTagPressed(FGameplayTag InputTag);
@@ -75,8 +65,7 @@ private:
 	UPROPERTY()
 	TObjectPtr<URPGAbilitySystemComponent> RPGAbilitySystemComponent;
 	URPGAbilitySystemComponent* GetASC();
-
-
+	
 
 	// === MENU SYSTEM ===
 	
@@ -88,20 +77,6 @@ private:
 	UPROPERTY()
 	TObjectPtr<UGameTabMenuWidget> CurrentGameMenu;
 	
-	/** Opens the game menu with tag validation */
-	UFUNCTION(BlueprintCallable, Category = "UI")
-	void OpenGameMenu();
-	
-	/** Closes the game menu with tag validation */
-	UFUNCTION(BlueprintCallable, Category = "UI")
-	void CloseGameMenu();
-	
-	/** Toggles the game menu (open/close) */
-	UFUNCTION(BlueprintCallable, Category = "UI")
-	void ToggleGameMenu();
-
-public:
-	UFUNCTION(Server, Reliable)
-	void Server_SetPartySwitchingLocked(bool bLocked);
+	bool IsAlive() const;
 };
 
