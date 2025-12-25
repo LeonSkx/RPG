@@ -12,7 +12,8 @@ void URPGGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handl
                                          const FGameplayAbilityActorInfo* ActorInfo,
                                          const FGameplayAbilityActivationInfo ActivationInfo,
                                          const FGameplayEventData* TriggerEventData)
-{
+{   
+    
     if (IsPlayerController())
     {
         OnPlayerAbilityActivated(Handle, ActorInfo, ActivationInfo, TriggerEventData);
@@ -130,22 +131,6 @@ float URPGGameplayAbility::GetAbilityCost(float InLevel) const
     return TotalCost;
 }
 
-void URPGGameplayAbility::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
-{
-    Super::InputPressed(Handle, ActorInfo, ActivationInfo);
-    OnAbilityInputPressed();
-}
-
-void URPGGameplayAbility::InputHeld(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
-{
-    OnAbilityInputHeld();
-}
-
-void URPGGameplayAbility::InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
-{
-    Super::InputReleased(Handle, ActorInfo, ActivationInfo);
-    OnAbilityInputReleased();
-}
 
 FGenericTeamId URPGGameplayAbility::GetOwnerTeamId() const
 {

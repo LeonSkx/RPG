@@ -89,49 +89,30 @@ void ARPGPlayerController::Look(const FInputActionValue& Value)
 }
 
 // Sistema de Input - métodos para InputConfig
-void ARPGPlayerController::AbilityInputTagPressed(FGameplayTag Tag)
+void ARPGPlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
 {
+	if (!InputTag.IsValid()) return;
 	if (!IsAlive()) return;
-	
-	if (URPGAbilitySystemComponent* ASC = GetASC())
-	{
-		// Verifica se há um combo ativo com este input tag
-		// Se houver, permite o input mesmo se houver bloqueio (para combos funcionarem)
-		const bool bComboOwnerActive = ASC->HasActiveAbilityWithInputTag(Tag);
-		
-		// Sempre processa o input - o sistema de combo precisa receber o input mesmo quando ativo
-		ASC->AbilityInputTagPressed(Tag);
-	}
+	if (GetASC()) GetASC()->AbilityInputTagPressed(InputTag);
 }
 
-void ARPGPlayerController::AbilityInputTagReleased(FGameplayTag Tag)
+void ARPGPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 {
+	if (!InputTag.IsValid()) return;
 	if (!IsAlive()) return;
-	
-	if (URPGAbilitySystemComponent* ASC = GetASC())
-	{
-		const bool bComboOwnerActive = ASC->HasActiveAbilityWithInputTag(Tag);
-		ASC->AbilityInputTagReleased(Tag);
-	}
+	if (GetASC()) GetASC()->AbilityInputTagReleased(InputTag);
 }
 
-void ARPGPlayerController::AbilityInputTagHeld(FGameplayTag Tag)
+void ARPGPlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 {
+	if (!InputTag.IsValid()) return;
 	if (!IsAlive()) return;
-	
-	if (URPGAbilitySystemComponent* ASC = GetASC())
-	{
-		const bool bComboOwnerActive = ASC->HasActiveAbilityWithInputTag(Tag);
-		if (!bComboOwnerActive)
-		{
-			ASC->AbilityInputTagHeld(Tag);
-		}
-	}
+	if (GetASC()) GetASC()->AbilityInputTagHeld(InputTag);
 }
 
 URPGAbilitySystemComponent* ARPGPlayerController::GetASC()
 {
-	if (!RPGAbilitySystemComponent)
+	if (!IsValid(RPGAbilitySystemComponent))
 	{
 		RPGAbilitySystemComponent = Cast<URPGAbilitySystemComponent>(
 			UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetPawn()));

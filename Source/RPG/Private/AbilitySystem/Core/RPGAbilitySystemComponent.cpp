@@ -34,37 +34,79 @@ void URPGAbilitySystemComponent::AddCharacterPassiveAbilities(const TArray<TSubc
     }
 }
 
+void URPGAbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& InputTag)
+{
+	if (!InputTag.IsValid()) return;
+	FScopedAbilityListLock ActiveScopeLock(*this);
+	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
+	{
+		if (AbilitySpec.GetDynamicSpecSourceTags().HasTagExact(InputTag))
+		{
+			AbilitySpecInputPressed(AbilitySpec);
+			if (AbilitySpec.IsActive())
+			{
+				InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputPressed, AbilitySpec.Handle, AbilitySpec.ActivationInfo.GetActivationPredictionKey());
+			}
+		}
+	}
+	
+	// Enviar evento usando a tag criada
+	if (GetAvatarActor())
+	{
+		FGameplayEventData Payload;
+		Payload.EventTag = FRPGGameplayTags::Get().Events_Abilities_InputPressed;
+		Payload.Instigator = GetAvatarActor();
+		// Adicionar o InputTag no InstigatorTags para que as abilities possam filtrar qual input foi pressionado
+		Payload.InstigatorTags.AddTag(InputTag);
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetAvatarActor(), FRPGGameplayTags::Get().Events_Abilities_InputPressed, Payload);
+	}
+}
+
 void URPGAbilitySystemComponent::AbilityInputTagHeld(const FGameplayTag& InputTag)
 {
-    if (!InputTag.IsValid()) return;
-    for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
-    {
-        if (AbilitySpec.GetDynamicSpecSourceTags().HasTagExact(InputTag))
-        {
-            AbilitySpecInputPressed(AbilitySpec);
-            if (!AbilitySpec.IsActive())
-            {
-                TryActivateAbility(AbilitySpec.Handle);
-            }
-        }
-    }
+	if (!InputTag.IsValid()) return;
+	FScopedAbilityListLock ActiveScopeLock(*this);
+	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
+	{
+		if (AbilitySpec.GetDynamicSpecSourceTags().HasTagExact(InputTag))
+		{
+			AbilitySpecInputPressed(AbilitySpec);
+			if (!AbilitySpec.IsActive())
+			{
+				TryActivateAbility(AbilitySpec.Handle);
+			}
+		}
+	}
+	
+	// Enviar evento usando a tag criada
+	if (GetAvatarActor())
+	{
+		FGameplayEventData Payload;
+		Payload.EventTag = FRPGGameplayTags::Get().Events_Abilities_InputHeld;
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetAvatarActor(), FRPGGameplayTags::Get().Events_Abilities_InputHeld, Payload);
+	}
 }
 
 void URPGAbilitySystemComponent::AbilityInputTagReleased(const FGameplayTag& InputTag)
 {
-    if (!InputTag.IsValid()) return;
-    for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
-    {
-        if (AbilitySpec.GetDynamicSpecSourceTags().HasTagExact(InputTag))
-        {
-            AbilitySpecInputReleased(AbilitySpec);
-        }
-    }
-}
-// Alias para tag pressionada
-void URPGAbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& InputTag)
-{
-    AbilityInputTagHeld(InputTag);
+	if (!InputTag.IsValid()) return;
+	FScopedAbilityListLock ActiveScopeLock(*this);
+	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
+	{
+		if (AbilitySpec.GetDynamicSpecSourceTags().HasTagExact(InputTag) && AbilitySpec.IsActive())
+		{
+			AbilitySpecInputReleased(AbilitySpec);
+			InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputReleased, AbilitySpec.Handle, AbilitySpec.ActivationInfo.GetActivationPredictionKey());
+		}
+	}
+	
+	// Enviar evento usando a tag criada
+	if (GetAvatarActor())
+	{
+		FGameplayEventData Payload;
+		Payload.EventTag = FRPGGameplayTags::Get().Events_Abilities_InputReleased;
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetAvatarActor(), FRPGGameplayTags::Get().Events_Abilities_InputReleased, Payload);
+	}
 }
 
 // Notifica que o AbilityActorInfo foi inicializado (stub)

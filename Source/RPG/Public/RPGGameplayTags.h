@@ -89,6 +89,11 @@ public:
 	// Status Tags
 	FGameplayTag Status_Aiming;
 
+	// Events Tags
+	FGameplayTag Events_Abilities_InputPressed;
+	FGameplayTag Events_Abilities_InputHeld;
+	FGameplayTag Events_Abilities_InputReleased;
+
 	// Combat Sockets
 	FGameplayTag CombatSocket_Weapon;
 

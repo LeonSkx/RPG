@@ -314,4 +314,24 @@ void FRPGGameplayTags::InitializeNativeGameplayTags()
 		FName("Status.Aiming"),
 		FString("Tag granted when character is aiming")
 		);
+
+	/*
+	 * Events Tags
+	 */
+
+	GameplayTags.Events_Abilities_InputPressed = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Events.Abilities.InputPressed"),
+		FString("Event tag sent when an input is pressed")
+		);
+
+	GameplayTags.Events_Abilities_InputHeld = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Events.Abilities.InputHeld"),
+		FString("Event tag sent when an input is held")
+		);
+
+	GameplayTags.Events_Abilities_InputReleased = UGameplayTagsManager::Get().AddNativeGameplayTag(
+		FName("Events.Abilities.InputReleased"),
+		FString("Event tag sent when an input is released")
+		);
+
 }

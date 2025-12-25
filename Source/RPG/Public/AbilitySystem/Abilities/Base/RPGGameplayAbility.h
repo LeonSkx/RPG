@@ -56,24 +56,7 @@ public:
     // Retorna o RPGPartyAIController se existir
     UFUNCTION(BlueprintCallable, Category = "Ability")
     ARPGPartyAIController* GetPartyAIController() const;
-
-    // Override de InputPressed/Released para expor como eventos Blueprint
-    virtual void InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
-    virtual void InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
-    
-    // InputHeld customizado (não existe na classe base do Unreal)
-    virtual void InputHeld(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo);
-
-    // Eventos Blueprint para capturar input durante a habilidade ativa
-    UFUNCTION(BlueprintImplementableEvent, Category = "Ability|Input")
-    void OnAbilityInputPressed();
-
-    UFUNCTION(BlueprintImplementableEvent, Category = "Ability|Input")
-    void OnAbilityInputHeld();
-
-    UFUNCTION(BlueprintImplementableEvent, Category = "Ability|Input")
-    void OnAbilityInputReleased();
-
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "RPG|Debug")
 	bool bDrawDebug = true;
 
